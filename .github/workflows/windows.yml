@@ -18,11 +18,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: 'godotengine/godot'
+          ref: '3.2.3-stable'
         
       # Clone vector graphics inside modules
       - uses: actions/checkout@v2
         with:
-          path: ./modules/vector_graphics 
+          path: './modules/vector_graphics'
           submodules: 'recursive'
 
       - name: Set up Python 3.x
