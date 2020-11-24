@@ -1,0 +1,57 @@
+name: Windows Build
+on: [push, pull_request]
+
+env:
+  GODOT_BASE_BRANCH: master
+  # Uses the svg patch
+  SCONSFLAGS: platform=windows verbose=yes warnings=all werror=yes --jobs=2 svg=patch
+  SCONS_CACHE_MSVC_CONFIG: true
+  SCONS_CACHE_LIMIT: 4096
+
+jobs:
+  win:
+    # Windows 10 with latest image
+    runs-on: "windows-latest"
+    
+    steps:
+      # Clone godot
+      - uses: actions/checkout@v2
+        with:
+          repository: 'godotengine/godot'
+        
+      # Clone vector graphics inside modules
+      - uses: actions/checkout@v2
+        with:
+          path: ./modules/vector_graphics 
+          submodules: 'recursive'
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+          
+      # Setup scons, print python version and scons version info, so if anything is broken it won't run the build.
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons pywin32
+          python --version
+          scons --version
+          
+      - name: Compilation
+        env:
+          SCONS_CACHE: /.scons_cache/
+        run: |
+          scons tools=yes tests=yes target=release_debug
+          ls -l bin/
+          
+      - name: Unit Tests
+        run: |
+          ./bin/godot.windows.opt.tools.64.exe --test
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: bin/*
+          retention-days: 14 
