@@ -5,6 +5,7 @@
 #include "vector_graphics_editor.h"
 
 #include "editor/plugins/canvas_item_editor_plugin.h"
+#include "editor/editor_scale.h"
 #include "core/os/keyboard.h"
 #include "tove2d/src/cpp/mesh/meshifier.h"
 
@@ -1550,7 +1551,7 @@ void VGEditor::_update_overlay(bool p_always_update) {
 		tove::TesselatorRef tesselator = tove::tove_make_shared<tove::AdaptiveTesselator>(
 			new tove::AdaptiveFlattener<tove::DefaultCurveFlattener>(
 				tove::DefaultCurveFlattener(100, 6)));
-	    tove::MeshRef tove_mesh = tove::tove_make_shared<tove::ColorMesh>(); 
+	    tove::MeshRef tove_mesh = tove::tove_make_shared<tove::ColorMesh>(tove::NameRef());
 		tesselator->graphicsToMesh(overlay_graphics.get(), UPDATE_MESH_EVERYTHING, tove_mesh, tove_mesh);
 		Ref<Texture> ignored_texture;
 		copy_mesh(overlay, tove_mesh, overlay_graphics, ignored_texture);

@@ -3,6 +3,9 @@
 /*************************************************************************/
 
 #include "register_types.h"
+#include "image_loader_svg_node_2d.h"
+#include "image_loader_svg_spatial.h"
+#include "image_loader_svg_vgpath.h"
 #include "resource_format_loader_svg.h"
 #include "vector_graphics_path.h"
 #include "vector_graphics_paint.h"
@@ -19,7 +22,7 @@
 #endif
 
 #if GDTOVE_SVG_RFL
-static ResourceFormatLoaderSVG *svg_loader = NULL;
+static Ref<ResourceFormatLoaderSVG> svg_loader;
 #endif
 
 #ifdef TOOLS_ENABLED
@@ -29,9 +32,9 @@ static void editor_init_callback() {
 }
 #endif
 
-void register_vector_graphics_types() {
+void register_gd_vector_graphics_types() {
 #if GDTOVE_SVG_RFL
-	svg_loader = memnew(ResourceFormatLoaderSVG);
+	svg_loader.instance();
 	ResourceLoader::add_resource_format_loader(svg_loader);
 #endif
 
@@ -46,10 +49,27 @@ void register_vector_graphics_types() {
 	ClassDB::register_class<VGSpriteRenderer>();
 	ClassDB::register_class<VGMeshRenderer>();
 
+	Ref<ResourceImporterSVGSpatial> svg_spatial_loader;
+	svg_spatial_loader.instance();
+	ResourceFormatImporter::get_singleton()->add_importer(svg_spatial_loader);
+
+
+	Ref<ResourceImporterSVGNode2D> svg_node_2d_loader;
+	svg_node_2d_loader.instance();
+	ResourceFormatImporter::get_singleton()->add_importer(svg_node_2d_loader);
+
+	Ref<ResourceImporterSVGVGPath> svg_vg_path_loader;
+	svg_vg_path_loader.instance();
+	ResourceFormatImporter::get_singleton()->add_importer(svg_vg_path_loader);
+
 #ifdef TOOLS_ENABLED
 	EditorNode::add_init_callback(editor_init_callback);
 #endif
 }
 
-void unregister_vector_graphics_types() {
+void unregister_gd_vector_graphics_types() {
+#if GDTOVE_SVG_RFL
+	ResourceLoader::remove_resource_format_loader(svg_loader);
+	svg_loader.unref();
+#endif
 }

@@ -1,86 +1,39 @@
 #!/usr/bin/env python
+import os
 
-Import('env')
-Import('env_modules')
+Import("env")
+Import("env_modules")
 
-env_tove = env_modules.Clone()
+env_module = env_modules.Clone()
 
-env_tove.add_source_files(env.modules_sources, "*.cpp")
+sources = Glob("*.cpp")
+sources += Glob("tove2d/src/cpp/*.cpp")
+sources += Glob("tove2d/src/cpp/mesh/*.cpp")
+sources += Glob("tove2d/src/cpp/shader/*.cpp")
+sources += Glob("tove2d/src/cpp/gpux/*.cpp")
+sources += Glob("tove2d/src/thirdparty/*.cpp")
+sources += Glob("tove2d/src/thirdparty/polypartition/src/*.cpp")
+sources += Glob("tove2d/src/thirdparty/tinyxml2/tinyxml2.cpp")
 
-env_tove.add_source_files(env.modules_sources, "tove2d/src/cpp/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/cpp/mesh/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/cpp/shader/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/cpp/gpux/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/thirdparty/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/thirdparty/polypartition/src/*.cpp")
-env_tove.add_source_files(env.modules_sources, "tove2d/src/thirdparty/tinyxml2/tinyxml2.cpp")
+env_module.Append(CPPDEFINES=["TOVE_GODOT"])
+env_module.Append(CPPPATH=[os.path.realpath(os.curdir), "tove2d/src/thirdparty/fp16/include"])
 
-import os 
-dir_path = Dir('.').abspath
-
-env_tove.Append(CXXFLAGS=[
-    '-std=c++11',
-    '-DTOVE_GODOT',
-    '-I' + os.path.join(dir_path, 'tove2d/src/thirdparty/fp16/include')])
 
 def package_sl(target, source, env):
-	with open(source[0].abspath, "r") as sl:
-		with open(target[0].abspath, "w") as out:
-			out.write('w << R"GLSL(\n')
-			out.write(sl.read())
-			out.write(')GLSL";\n')
-
-env_tove.Append(BUILDERS={
-	'PackageSL':Builder(action=package_sl)})
-
-env_tove.PackageSL(
-	'tove2d/src/glsl/fill.frag.inc',
-	Glob('tove2d/src/glsl/fill.frag'))
-
-env_tove.PackageSL(
-	'tove2d/src/glsl/line.vert.inc',
-	Glob('tove2d/src/glsl/line.vert'))
-
-# patching.
-
-env_vars = Variables(None, ARGUMENTS)
-env_vars.Add(EnumVariable(
-	'svg',
-	'patch for vector graphics svg support?',
-	'nopatch',  allowed_values=('patch', 'nopatch')))
-env_vars.Update(env)
-
-if env['svg'] == 'patch':
-	declare_vector_sprite = '''
-Node *createVectorSprite(Ref<Resource> p_resource);
-void configureVectorSprite(Node *p_child, Ref<Resource> p_texture);
-	'''
-	replace_create = (
-		('child = memnew(Sprite);',
-		'child = createVectorSprite(texture);'),
-
-		('_create_nodes(target_node, child, path, drop_pos);',
-		'_create_nodes(target_node, child, path, drop_pos); configureVectorSprite(child, texture);')
-	)
+    with open(source[0].abspath, "r") as sl:
+        with open(target[0].abspath, "w") as out:
+            out.write('w << R"GLSL(\n')
+            out.write(sl.read())
+            out.write(')GLSL";\n')
 
 
-	editor_plugins_path = Dir('../../editor/plugins').abspath
-	file_path = os.path.join(editor_plugins_path, 'canvas_item_editor_plugin.cpp')
-	with open(file_path, 'r+') as f:
-		source_code = f.read()
-		if declare_vector_sprite not in source_code:
-				lines = source_code.split("\n")
-				include_index = None
-				for i, line in enumerate(lines):
-					if line.strip().startswith('#include'):
-						include_index = i
-				lines.insert(include_index + 1, declare_vector_sprite)
-				source_code = "\n".join(lines)
+env_module.Append(BUILDERS={"PackageSL": Builder(action=package_sl)})
 
-				for a, b in replace_create:
-					source_code = source_code.replace(a, b)
+env_module.PackageSL("tove2d/src/glsl/fill.frag.inc", Glob("tove2d/src/glsl/fill.frag"))
 
-				f.seek(0)
-				f.write(source_code)
+env_module.PackageSL("tove2d/src/glsl/line.vert.inc", Glob("tove2d/src/glsl/line.vert"))
 
-				print("patched %s" % file_path)
+# Compile as a static library
+lib = env_module.Library("gd_vector_graphics", sources)
+# Add the library as a dependency of the final executable
+env.Prepend(LIBS=[lib])
