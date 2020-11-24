@@ -4,7 +4,7 @@ on: [push, pull_request]
 env:
   GODOT_BASE_BRANCH: master
   # Uses the svg patch
-  SCONSFLAGS: platform=windows verbose=yes warnings=all --jobs=2 svg=patch
+  SCONSFLAGS: platform=windows verbose=yes warnings=all werror=yes --jobs=2 svg=patch
   SCONS_CACHE_MSVC_CONFIG: true
   SCONS_CACHE_LIMIT: 4096
 
@@ -23,7 +23,7 @@ jobs:
       # Clone vector graphics inside modules
       - uses: actions/checkout@v2
         with:
-          path: './modules/vector_graphics'
+          path: './modules/gd_vector_graphics'
           submodules: 'recursive'
 
       - name: Set up Python 3.x
