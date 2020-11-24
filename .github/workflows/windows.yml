@@ -25,6 +25,13 @@ jobs:
         with:
           path: './modules/gd_vector_graphics'
           submodules: 'recursive'
+          
+      - name: Load .scons_cache directory
+        id: windows-editor-cache
+        uses: RevoluPowered/cache@v2.1
+        with:
+          path: '/.scons_cache/'
+          key: ${{github.job}}-${{env.GODOT_BASE_BRANCH}}-${{github.ref}}-${{github.sha}}
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v2
@@ -46,10 +53,6 @@ jobs:
         run: |
           scons tools=yes tests=yes target=release_debug
           ls -l bin/
-          
-      - name: Unit Tests
-        run: |
-          ./bin/godot.windows.opt.tools.64.exe --test
           
       - uses: actions/upload-artifact@v2
         with:
