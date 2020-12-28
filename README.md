@@ -1,3 +1,11 @@
+----------
+
+Note from orion : I tried to compile it but things seems buggy, I tried to import an SVG and it didn't work.
+
+I don't have time to check why this doesn't work though
+
+----------
+
 Vector Graphics for Godot.
 
 * This is an experiment
